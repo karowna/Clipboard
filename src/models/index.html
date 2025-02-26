@@ -8,6 +8,11 @@
 </head>
 <body>
 
+    <!-- GIF Overlay (Top-Right Corner) -->
+    <div id="loading-overlay">
+        <img src="/static/clippy.gif" alt="Loading..." id="loading-gif">
+    </div>
+
     <button id="deleteAllButton">Delete All</button>
     <h1>Clipped Content</h1>
 
@@ -24,6 +29,16 @@
     </div>
 
     <script>
+        // Show GIF overlay on page load, then fade it out
+        window.onload = function() {
+            setTimeout(() => {
+                document.getElementById("loading-overlay").style.opacity = "0";
+                setTimeout(() => {
+                    document.getElementById("loading-overlay").style.display = "none";
+                }, 500); // Smooth fade-out
+            }, 1500); // Display for 1.5 seconds
+        };
+
         document.addEventListener("paste", async (event) => {
             let items = event.clipboardData.items;
 
