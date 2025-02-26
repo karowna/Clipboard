@@ -3,7 +3,6 @@ package middleware
 import (
 	"net/http"
 	"os"
-	
 )
 
 var AuthUsername string
@@ -13,6 +12,7 @@ func InitializeVariables() {
 	AuthUsername = os.Getenv("USERNAME")
 	AuthPassword = os.Getenv("PASSWORD")
 }
+
 func BasicAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		username, password, ok := r.BasicAuth()
