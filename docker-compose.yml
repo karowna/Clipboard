@@ -9,17 +9,19 @@ services:
     volumes:
       - .:/app
     ports:
-      - "8080:8080"
+      - "8088:8088"
     depends_on:
       - postgresql
     environment: 
-      - PORT=8080
+      - PORT=8088
       - DB_HOST=postgresql
       - DB_USERNAME=postgres
       - DB_PASSWORD=testtesttest
+      - USERNAME=blah
+      - PASSWORD=blah
     
   postgresql:
-    image: registry.fluidcloud.bskyb.com/digital-trading/postgres:latest
+    image: postgres
     ports: 
       - 5432:5432
     restart: always

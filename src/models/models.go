@@ -1,7 +1,10 @@
 package models
 
 type ClipItem struct {
-	ID           uint
+	ID      uint   `gorm:"primaryKey"`
 	Content string `json:"content,omitempty"`
-    Image   []byte `json:"image,omitempty"`
+	Image   string `json:"image,omitempty"`
+}
+type TemplateData struct {
+	ClipItems []ClipItem
 }

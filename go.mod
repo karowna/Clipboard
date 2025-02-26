@@ -1,4 +1,4 @@
-module github.com/karowna/Clipboard/src
+module github.com/karowna/Clipboard
 
 go 1.23.1
 

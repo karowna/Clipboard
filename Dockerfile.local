@@ -1,18 +1,24 @@
+# Base image
 FROM registry.fluidcloud.bskyb.com/digital-trading/golang-arm:1.24 as base
 
 WORKDIR /app
 
-COPY go.mod ./
+COPY go.mod go.sum ./
 RUN go mod download
 RUN go install github.com/air-verse/air@latest
 
+# Build stage
 FROM base as build
 
 COPY . ./
+RUN --mount=type=cache,target=/root/.cache/go-build CGO_ENABLED=0 go build -o clipboard ./src/main.go
 
-RUN --mount=type=cache,target=/root/.cache/go-build CGO_ENABLED=0 go build ./src/main.go
+# Debug stage
+FROM base as debug
 
-# Create final image
+COPY --from=build /app /app
+
+# Final image
 FROM scratch
 
 WORKDIR /
@@ -21,4 +27,4 @@ COPY --from=build /app .
 
 EXPOSE 8080
 
-CMD ["./clipboard"]
+CMD ["go", "run", "./src/main.go"]

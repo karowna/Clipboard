@@ -3,10 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Clipboard</title>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <h1>{{.Heading}}</h1>
-    <h1>{{.Content}}</h1>
+
+    <button id="deleteAllButton">Delete All</button>
+    <h1>Clipped Content</h1>
+
+    <div class="grid-container">
+        {{range .ClipItems}}
+            <div class="clip-box" onclick="copyFile('{{.Image}}')">
+                <div class="clip-content">
+                    {{if .Image}}
+                        <img src="{{.Image}}" alt="Clipped Image" class="clip-image">
+                    {{end}}
+                </div>
+            </div>
+        {{end}}
+    </div>
+
+    <script>
+        document.addEventListener("paste", async (event) => {
+            let items = event.clipboardData.items;
+
+            for (let item of items) {
+                if (item.type.startsWith("image/")) {
+                    let blob = item.getAsFile();
+                    let reader = new FileReader();
+
+                    reader.onload = async function(e) {
+                        let base64Image = e.target.result.split(",")[1];
+
+                        await fetch("/paste", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ content: "", image: base64Image })
+                        });
+
+                        location.reload();
+                    };
+
+                    reader.readAsDataURL(blob);
+                    break;
+                }
+            }
+        });
+
+        async function copyFile(imageUrl) {
+            try {
+                const response = await fetch(imageUrl);
+                const blob = await response.blob();
+                await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+            } catch (error) {
+                console.error("Failed to copy file:", error);
+            }
+        }
+
+        document.getElementById("deleteAllButton").addEventListener("click", async () => {
+            if (!confirm("Are you sure you want to delete all images?")) return;
+
+            await fetch("/delete-all", { method: "DELETE" });
+            location.reload();
+        });
+
+    </script>
 </body>
 </html>
