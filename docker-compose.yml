@@ -1,0 +1,27 @@
+version: '3.6'
+services:
+  server:
+    build: 
+      dockerfile: Dockerfile.local
+      context: .
+      target: build
+    command: air
+    volumes:
+      - .:/app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgresql
+    environment: 
+      - PORT=8080
+      - DB_HOST=postgresql
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=testtesttest
+    
+  postgresql:
+    image: registry.fluidcloud.bskyb.com/digital-trading/postgres:latest
+    ports: 
+      - 5432:5432
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: testtesttest

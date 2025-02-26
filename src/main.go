@@ -11,6 +11,9 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/karowna/Clipboard/src/database"
+	"github.com/karowna/Clipboard/src/models"
+	"github.com/karowna/Clipboard/src/middleware"
+
 )
 
 var indexTemplate *template.Template
@@ -31,13 +34,27 @@ func init() {
 
 func main() {
 	
-	db, err := gorm.Open(postgres.Open(database.DbConnectionString()), &gorm.Config{Logger: logger.Default.LogMode(logger.Silent)})
+	db, err := gorm.Open(postgres.Open(database.DbConnectionString()))
 	if err != nil {
 		log.Panic(err)
 	}
-	db.AutoMigrate(&models.Webhook{})
+	db.AutoMigrate(&models.ClipItem{})
 
 	router := mux.NewRouter()
 
 	router.PathPrefix("/index/static/").Handler(http.StripPrefix("/index/static/", http.FileServer(http.Dir("src/static"))))
+
+	router.HandleFunc("/", middleware.BasicAuth(func(w http.ResponseWriter, r *http.Request) {
+		clippedContent := database.GetClippedContent(db)
+		data := models.ClipItem{
+			Content: clippedContent,
+		}
+
+		err = indexTemplate.Execute(w, data)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}))
+
 }

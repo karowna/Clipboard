@@ -1,0 +1,24 @@
+FROM registry.fluidcloud.bskyb.com/digital-trading/golang-arm:1.24 as base
+
+WORKDIR /app
+
+COPY go.mod ./
+RUN go mod download
+RUN go install github.com/air-verse/air@latest
+
+FROM base as build
+
+COPY . ./
+
+RUN --mount=type=cache,target=/root/.cache/go-build CGO_ENABLED=0 go build ./src/main.go
+
+# Create final image
+FROM scratch
+
+WORKDIR /
+
+COPY --from=build /app .
+
+EXPOSE 8080
+
+CMD ["./clipboard"]
