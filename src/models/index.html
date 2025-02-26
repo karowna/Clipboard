@@ -14,11 +14,14 @@
     </div>
 
     <button id="deleteAllButton">Delete All</button>
+    <input type="file" id="fileUpload" accept="image/*" style="display: none;">
+    <button id="uploadButton" style="display: none;">Upload Image</button>
+
     <h1>Clipped Content</h1>
 
     <div class="grid-container">
         {{range .ClipItems}}
-            <div class="clip-box" onclick="copyFile('{{.Image}}')">
+            <div class="clip-box" onclick="handleClick('{{.Image}}')">
                 <div class="clip-content">
                     {{if .Image}}
                         <img src="{{.Image}}" alt="Clipped Image" class="clip-image">
@@ -27,6 +30,9 @@
             </div>
         {{end}}
     </div>
+
+    <!-- Copied Toast Notification -->
+    <div id="copy-toast">Copied!</div>
 
     <script>
         // Show GIF overlay on page load, then fade it out
@@ -65,14 +71,71 @@
             }
         });
 
+        // Detect Mobile & Show Upload Button
+        if (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
+            document.getElementById("uploadButton").style.display = "block";
+        }
+
+        // Click Upload Button → Trigger File Input
+        document.getElementById("uploadButton").addEventListener("click", () => {
+            document.getElementById("fileUpload").click();
+        });
+
+        // Handle File Upload
+        document.getElementById("fileUpload").addEventListener("change", async function(event) {
+            if (event.target.files.length === 0) return;
+
+            const file = event.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = async function(e) {
+                const base64Image = e.target.result.split(",")[1];
+
+                await fetch("/paste", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ content: "", image: base64Image })
+                });
+
+                location.reload();
+            };
+
+            reader.readAsDataURL(file);
+        });
+
+        function handleClick(imageUrl) {
+            if (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
+                // Mobile: Open image in new tab
+                window.open(imageUrl, "_blank");
+            } else {
+                // Desktop: Copy image to clipboard
+                copyFile(imageUrl);
+            }
+        }
+
         async function copyFile(imageUrl) {
             try {
                 const response = await fetch(imageUrl);
                 const blob = await response.blob();
-                await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+
+                if (navigator.clipboard && navigator.clipboard.write) {
+                    await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+                    showCopiedMessage();
+                } else {
+                    alert("Your browser does not support direct image copying.");
+                }
             } catch (error) {
-                console.error("Failed to copy file:", error);
+                console.error("Failed to copy image file:", error);
+                alert("Error copying image.");
             }
+        }
+
+        function showCopiedMessage() {
+            const toast = document.getElementById("copy-toast");
+            toast.style.opacity = "1";
+            setTimeout(() => {
+                toast.style.opacity = "0";
+            }, 1500);
         }
 
         document.getElementById("deleteAllButton").addEventListener("click", async () => {
@@ -83,5 +146,6 @@
         });
 
     </script>
+
 </body>
 </html>
